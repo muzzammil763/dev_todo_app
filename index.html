@@ -118,6 +118,90 @@
             min-width: 200px;
         }
 
+
+        .empty-state {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            background: var(--bg-lighter);
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .code-block {
+            text-align: left;
+            display: inline-block;
+            padding: 1.5rem;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+        }
+
+        .keyword {
+            color: var(--accent);
+        }
+
+        .string {
+            color: var(--warning);
+        }
+
+        .number {
+            color: var(--success);
+        }
+
+        .variable {
+            color: var(--text-primary);
+        }
+
+        .comment {
+            color: var(--text-secondary);
+        }
+
+        .edit-form {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            align-items: center;
+        }
+
+        .edit-form input,
+        .edit-form select {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: var(--bg-lighter);
+            color: var(--text-primary);
+            border: 1px solid var(--text-secondary);
+        }
+
+        .edit-form .edit-input {
+            flex: 1;
+        }
+
+        .icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1.1rem;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .icon-button:hover {
+            opacity: 1;
+        }
+
+        .cancel-btn {
+            background-color: var(--error);
+            opacity: 0.8;
+        }
+
+        .cancel-btn:hover {
+            opacity: 1;
+        }
+
         button {
             cursor: pointer;
             background-color: var(--accent);
@@ -448,6 +532,30 @@
             ).join('');
         }
 
+        function editTodo(id) {
+            const todo = todos.find(t => t.id === id);
+            const todoElement = document.querySelector(`[data-todo-id="${id}"]`);
+            const editForm = `
+        <div class="edit-form">
+            <input type="text" class="edit-input" value="${todo.text}" />
+            <select class="edit-category">
+                ${Array.from(categories)
+                    .map(cat => `<option value="${cat}" ${cat === todo.category ? 'selected' : ''}>${cat}</option>`)
+                    .join('')}
+            </select>
+            <select class="edit-priority">
+                <option value="low" ${todo.priority === 'low' ? 'selected' : ''}>Low</option>
+                <option value="medium" ${todo.priority === 'medium' ? 'selected' : ''}>Medium</option>
+                <option value="high" ${todo.priority === 'high' ? 'selected' : ''}>High</option>
+                <option value="urgent" ${todo.priority === 'urgent' ? 'selected' : ''}>🔥 Urgent</option>
+            </select>
+            <button onclick="saveEdit(${id})">Save</button>
+            <button onclick="renderTodos()" class="cancel-btn">Cancel</button>
+        </div>
+    `;
+            todoElement.innerHTML = editForm;
+        }
+
         const originalRenderTodos = renderTodos;
         renderTodos = function () {
             originalRenderTodos();
@@ -486,27 +594,79 @@
                 <span class="comment">/* By Priority */</span><br>
                 ${Object.entries(byPriority)
                     .map(([priority, count]) => `${priority}: ${count}`)
-                    .join('<br>')}
-            `;
+                    .join('<br>')}`;
         }
+
+
 
         function renderTodos() {
             const todoList = document.getElementById('todoList');
+
+            if (todos.length === 0) {
+                todoList.innerHTML = `
+            <div class="empty-state">
+                <div class="code-block">
+                    <span class="comment">// No todos found</span><br>
+                    <span class="keyword">const</span> <span class="variable">developer</span> = {<br>
+                    &nbsp;&nbsp;status: <span class="string">"relaxing"</span>,<br>
+                    &nbsp;&nbsp;todos: <span class="number">[]</span>,<br>
+                    &nbsp;&nbsp;coffee: <span class="string">"needed"</span><br>
+                    };<br><br>
+                    <span class="comment">// Add your first task above! ☝️</span>
+                </div>
+            </div>
+        `;
+                return;
+            }
+
             todoList.innerHTML = todos
                 .sort((a, b) => {
-                    // Sort by priority first (urgent > high > medium > low)
-                    const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
-                    if (a.priority !== b.priority) {
-                        return priorityOrder[a.priority] - priorityOrder[b.priority];
-                    }
-                    // Then by completion status
-                    if (a.completed !== b.completed) {
-                        return a.completed ? 1 : -1;
-                    }
-                    // Finally by timestamp
-                    return new Date(b.timestamp) - new Date(a.timestamp);
+                    // ... (keep existing sort logic)
                 })
                 .map((todo, index) => `
+            <li class="todo-item priority-${todo.priority} ${todo.completed ? 'completed' : ''}" data-todo-id="${todo.id}">
+                <div class="todo-content">
+                    <div onclick="toggleTodo(${todo.id})" style="cursor: pointer;">
+                        ${todo.text}
+                    </div>
+                    <div class="todo-meta">
+                        ${todo.category} | Priority: ${todo.priority} | 
+                        ${new Date(todo.timestamp).toLocaleString()}
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="icon-button edit-btn" onclick="editTodo(${todo.id})" title="Edit">
+                        ✏️
+                    </button>
+                    <select onchange="editCategory(${todo.id})">
+                        ${Array.from(categories)
+                        .map(cat => `<option value="${cat}" ${cat === todo.category ? 'selected' : ''}>${cat}</option>`)
+                        .join('')}
+                    </select>
+                    <button class="icon-button delete-btn" onclick="deleteTodo(${todo.id})" title="Delete">
+                        🗑️
+                    </button>
+                </div>
+            </li>
+        `).join('');
+
+            updateStats();
+        } const todoList = document.getElementById('todoList');
+        todoList.innerHTML = todos
+            .sort((a, b) => {
+                // Sort by priority first (urgent > high > medium > low)
+                const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+                if (a.priority !== b.priority) {
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                }
+                // Then by completion status
+                if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                }
+                // Finally by timestamp
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            })
+            .map((todo, index) => `
                     <li class="todo-item priority-${todo.priority} ${todo.completed ? 'completed' : ''}">
                         <div class="todo-content">
                             <div onclick="toggleTodo(${todo.id})" style="cursor: pointer;">
@@ -520,22 +680,49 @@
                         <div class="actions">
                             <select onchange="editCategory(${todo.id})">
                                 ${Array.from(categories)
-                        .map(cat => `<option value="${cat}" ${cat === todo.category ? 'selected' : ''}>${cat}</option>`)
-                        .join('')}
+                    .map(cat => `<option value="${cat}" ${cat === todo.category ? 'selected' : ''}>${cat}</option>`)
+                    .join('')}
                             </select>
                             <button onclick="deleteTodo(${todo.id})">Delete</button>
                         </div>
                     </li>
                 `).join('');
 
-            updateStats();
-        }
+        updateStats();
+
 
         document.getElementById('todoInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 addTodo();
             }
+
         });
+
+        function saveEdit(id) {
+            const todoElement = document.querySelector(`[data-todo-id="${id}"]`);
+            const editInput = todoElement.querySelector('.edit-input');
+            const editCategory = todoElement.querySelector('.edit-category');
+            const editPriority = todoElement.querySelector('.edit-priority');
+
+            todos = todos.map(todo => {
+                if (todo.id === id) {
+                    return {
+                        ...todo,
+                        text: editInput.value,
+                        category: editCategory.value,
+                        priority: editPriority.value
+                    };
+                }
+                return todo;
+            });
+
+            saveTodos();
+            renderTodos();
+        }
+
+
+
+
         renderTodos();
     </script>
 </body>
