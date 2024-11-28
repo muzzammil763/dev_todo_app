@@ -145,7 +145,6 @@
             position: relative;
             height: 100%;
             max-height: calc(100vh - 150px);
-            /* Adjust based on header height */
         }
 
         .todo-list {
@@ -155,7 +154,6 @@
 
         .todo-item {
             scroll-snap-align: start;
-            /* Snap items to the start */
             background-color: var(--bg-lighter);
             padding: 1rem;
             margin-bottom: 0.5rem;
@@ -361,9 +359,6 @@
     <script>
         let todos = JSON.parse(localStorage.getItem('todos')) || [];
         let categories = new Set(['feature', 'bug', 'refactor', 'docs', 'testing']);
-
-
-        // Handle custom category visibility
         document.getElementById('categorySelect').addEventListener('change', function (e) {
             const customInput = document.getElementById('customCategory');
             customInput.style.display = e.target.value === 'custom' ? 'block' : 'none';
@@ -536,7 +531,6 @@
             updateStats();
         }
 
-        // Event listener for Enter key
         document.getElementById('todoInput').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 addTodo();
