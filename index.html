@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Todo App</title>
+    <style>
+        :root {
+            --bg-dark: #1e1e1e;
+            --bg-lighter: #252526;
+            --text-primary: #d4d4d4;
+            --text-secondary: #858585;
+            --accent: #569cd6;
+            --success: #4ec9b0;
+            --warning: #ce9178;
+            --error: #f44747;
+            --urgent: #ff0000;
+            --line-numbers: #858585;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Consolas', monospace;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow: hidden;
+            padding: 1rem;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+            height: calc(100vh - 2rem);
+            overflow: hidden;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .line-numbers {
+            position: absolute;
+            left: -3rem;
+            top: 0;
+            bottom: 0;
+            width: 2.5rem;
+            background: var(--bg-lighter);
+            border-right: 1px solid var(--text-secondary);
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            left: -3rem;
+            top: 0;
+            bottom: 0;
+            width: 2.5rem;
+            background: var(--bg-lighter);
+            border-right: 1px solid var(--text-secondary);
+        }
+
+        h1 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--text-secondary);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h1::before {
+            content: '1';
+            color: var(--line-numbers);
+            font-size: 0.8rem;
+            position: absolute;
+            left: -2.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            margin-left: 1px;
+            margin-right: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        input,
+        select,
+        button {
+            background-color: var(--bg-lighter);
+            border: 1px solid var(--text-secondary);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        button {
+            cursor: pointer;
+            background-color: var(--accent);
+            border: none;
+            color: var(--bg-dark);
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .custom-category {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .todo-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            position: relative;
+            height: 100%;
+            max-height: calc(100vh - 150px);
+            /* Adjust based on header height */
+        }
+
+        .todo-list {
+            list-style: none;
+            padding: 0.5rem 0;
+        }
+
+        .todo-item {
+            scroll-snap-align: start;
+            /* Snap items to the start */
+            background-color: var(--bg-lighter);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .todo-item:hover {
+            transform: translateX(5px);
+        }
+
+        .todo-item.completed {
+            opacity: 0.7;
+            text-decoration: line-through;
+        }
+
+        .todo-content {
+            flex: 1;
+        }
+
+        .todo-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .priority-high {
+            border-left: 3px solid var(--error);
+        }
+
+        .priority-medium {
+            border-left: 3px solid var(--warning);
+        }
+
+        .priority-low {
+            border-left: 3px solid var(--success);
+        }
+
+        .priority-urgent {
+            border-left: 3px solid var(--urgent);
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .stats-panel {
+            background-color: var(--bg-lighter);
+            padding: 1rem;
+            border-radius: 4px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .stats {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: var(--bg-lighter);
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .comment {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-indicator.completed {
+            background-color: var(--success);
+        }
+
+        .status-indicator.pending {
+            background-color: var(--warning);
+        }
+
+        .kbd {
+            background-color: var(--bg-lighter);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            border: 1px solid var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-secondary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        .priority-high {
+            border-left: 3px solid var(--error);
+        }
+
+        .priority-medium {
+            border-left: 3px solid var(--warning);
+        }
+
+        .priority-low {
+            border-left: 3px solid var(--success);
+        }
+
+        .priority-urgent {
+            border-left: 3px solid var(--urgent);
+        }
+
+
+        .todo-container::-webkit-scrollbar {
+            width: 8px;
+
+        }
+
+        .todo-container::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+            border-radius: 4px;
+        }
+
+        .todo-container::-webkit-scrollbar-thumb {
+            background: var(--text-secondary);
+            border-radius: 4px;
+        }
+
+        .todo-container::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        @media (pointer: coarse) {
+            .todo-container {
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .stats-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="line-numbers"></div>
+            <h1>
+                <span class="comment">/**</span>
+                Dev Todo App v1.0
+                <span class="comment">*/</span>
+            </h1>
+
+            <div class="input-group">
+                <input type="text" id="todoInput" placeholder="New task... (Press Enter to add)" />
+                <div class="custom-category">
+                    <select id="categorySelect">
+                        <option value="feature">Feature</option>
+                        <option value="bug">Bug Fix</option>
+                        <option value="refactor">Refactor</option>
+                        <option value="docs">Documentation</option>
+                        <option value="testing">Testing</option>
+                        <option value="custom">+ Custom</option>
+                    </select>
+                    <input type="text" id="customCategory" placeholder="Custom category" style="display: none;" />
+                </div>
+                <select id="prioritySelect">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">🔥 Urgent</option>
+                </select>
+                <button onclick="addTodo()">Add Task</button>
+            </div>
+
+            <div class="todo-container">
+                <ul id="todoList" class="todo-list"></ul>
+            </div>
+        </div>
+
+        <div class="stats-panel" id="stats">
+            <span class="comment">/* Loading statistics... */</span>
+        </div>
+    </div>
+
+    <script>
+        let todos = JSON.parse(localStorage.getItem('todos')) || [];
+        let categories = new Set(['feature', 'bug', 'refactor', 'docs', 'testing']);
+
+
+        // Handle custom category visibility
+        document.getElementById('categorySelect').addEventListener('change', function (e) {
+            const customInput = document.getElementById('customCategory');
+            customInput.style.display = e.target.value === 'custom' ? 'block' : 'none';
+            if (e.target.value === 'custom') {
+                customInput.focus();
+            }
+        });
+
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            const categorySelect = document.getElementById('categorySelect');
+            const customCategory = document.getElementById('customCategory');
+            const priority = document.getElementById('prioritySelect').value;
+
+            let category = categorySelect.value;
+            if (category === 'custom' && customCategory.value.trim()) {
+                category = customCategory.value.trim().toLowerCase();
+                if (!categories.has(category)) {
+                    categories.add(category);
+                    updateCategorySelect();
+                }
+            }
+
+            if (input.value.trim()) {
+                const todo = {
+                    id: Date.now(),
+                    text: input.value,
+                    category,
+                    priority,
+                    completed: false,
+                    timestamp: new Date().toISOString()
+                };
+
+                todos.push(todo);
+                saveTodos();
+                renderTodos();
+                input.value = '';
+                customCategory.value = '';
+                categorySelect.value = 'feature';
+                customCategory.style.display = 'none';
+            }
+        }
+
+        function updateCategorySelect() {
+            const select = document.getElementById('categorySelect');
+            const currentValue = select.value;
+            select.innerHTML = Array.from(categories)
+                .sort()
+                .map(cat => `<option value="${cat}">${cat}</option>`)
+                .join('') + '<option value="custom">+ Custom</option>';
+            select.value = currentValue;
+        }
+
+        function toggleTodo(id) {
+            todos = todos.map(todo =>
+                todo.id === id ? { ...todo, completed: !todo.completed } : todo
+            );
+            saveTodos();
+            renderTodos();
+        }
+
+        function deleteTodo(id) {
+            todos = todos.filter(todo => todo.id !== id);
+            saveTodos();
+            renderTodos();
+        }
+
+        function editCategory(id) {
+            const todo = todos.find(t => t.id === id);
+            const selectElement = document.querySelector(`select[onchange="editCategory(${id})"]`);
+            const newCategory = selectElement.value;
+
+            if (newCategory && newCategory !== 'custom') {
+                todo.category = newCategory;
+                saveTodos();
+                renderTodos();
+            }
+        }
+
+        function updateLineNumbers() {
+            const todoCount = todos.length;
+            const lineNumbers = document.querySelector('.line-numbers');
+            lineNumbers.innerHTML = Array.from({ length: todoCount + 10 }, (_, i) =>
+                `<div style="color: var(--line-numbers); padding: 0 0.5rem; text-align: right; font-size: 0.8rem;">
+                    ${i + 1}
+                </div>`
+            ).join('');
+        }
+
+        const originalRenderTodos = renderTodos;
+        renderTodos = function () {
+            originalRenderTodos();
+            updateLineNumbers();
+        };
+
+        function saveTodos() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+            updateStats();
+        }
+
+        function updateStats() {
+            const total = todos.length;
+            const completed = todos.filter(t => t.completed).length;
+            const pending = total - completed;
+            const byCategory = todos.reduce((acc, todo) => {
+                acc[todo.category] = (acc[todo.category] || 0) + 1;
+                return acc;
+            }, {});
+            const byPriority = todos.reduce((acc, todo) => {
+                acc[todo.priority] = (acc[todo.priority] || 0) + 1;
+                return acc;
+            }, {});
+
+            document.getElementById('stats').innerHTML = `
+                <span class="comment">/* Statistics */</span><br>
+                <div><span class="status-indicator pending"></span>Total Tasks: ${total}</div>
+                <div><span class="status-indicator completed"></span>Completed: ${completed}</div>
+                <div><span class="status-indicator pending"></span>Pending: ${pending}</div>
+                <br>
+                <span class="comment">/* By Category */</span><br>
+                ${Object.entries(byCategory)
+                    .map(([category, count]) => `${category}: ${count}`)
+                    .join('<br>')}
+                <br><br>
+                <span class="comment">/* By Priority */</span><br>
+                ${Object.entries(byPriority)
+                    .map(([priority, count]) => `${priority}: ${count}`)
+                    .join('<br>')}
+            `;
+        }
+
+        function renderTodos() {
+            const todoList = document.getElementById('todoList');
+            todoList.innerHTML = todos
+                .sort((a, b) => {
+                    // Sort by priority first (urgent > high > medium > low)
+                    const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+                    if (a.priority !== b.priority) {
+                        return priorityOrder[a.priority] - priorityOrder[b.priority];
+                    }
+                    // Then by completion status
+                    if (a.completed !== b.completed) {
+                        return a.completed ? 1 : -1;
+                    }
+                    // Finally by timestamp
+                    return new Date(b.timestamp) - new Date(a.timestamp);
+                })
+                .map((todo, index) => `
+                    <li class="todo-item priority-${todo.priority} ${todo.completed ? 'completed' : ''}">
+                        <div class="todo-content">
+                            <div onclick="toggleTodo(${todo.id})" style="cursor: pointer;">
+                                ${todo.text}
+                            </div>
+                            <div class="todo-meta">
+                                ${todo.category} | Priority: ${todo.priority} | 
+                                ${new Date(todo.timestamp).toLocaleString()}
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <select onchange="editCategory(${todo.id})">
+                                ${Array.from(categories)
+                        .map(cat => `<option value="${cat}" ${cat === todo.category ? 'selected' : ''}>${cat}</option>`)
+                        .join('')}
+                            </select>
+                            <button onclick="deleteTodo(${todo.id})">Delete</button>
+                        </div>
+                    </li>
+                `).join('');
+
+            updateStats();
+        }
+
+        // Event listener for Enter key
+        document.getElementById('todoInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                addTodo();
+            }
+        });
+        renderTodos();
+    </script>
+</body>
+
+</html>
