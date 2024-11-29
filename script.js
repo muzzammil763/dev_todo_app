@@ -73,8 +73,10 @@ function editCategory(id) {
     const selectElement = document.querySelector(`select[onchange="editCategory(${id})"]`);
     const newCategory = selectElement.value;
 
-    if (newCategory && newCategory !== 'custom') {
+    if (newCategory && newCategory !== 'custom' && newCategory !== todo.category) {
         todo.category = newCategory;
+        todo.timestamp = new Date().toISOString();
+        todo.edited = true; 
         saveTodos();
         renderTodos();
     }
