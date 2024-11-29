@@ -12,9 +12,9 @@
     <div class="container">
         <div class="main-content">
             <div class="line-numbers"></div>
-            <h1>
+            <h1 class="app-title" oncopy="handleTitleCopy(event)">
                 <span class="comment">/**</span>
-                Dev Todo App (Web) v1.0
+                <span class="title-text">Dev Todo App (Web) v1.0</span>
                 <span class="comment">*/</span>
             </h1>
 
@@ -54,3 +54,20 @@
 </body>
 
 </html>
+
+<script>
+    function handleTitleCopy(event) {
+        // Prevent the default copy behavior
+        event.preventDefault();
+        
+        // Set the custom text to be copied
+        const customText = "WHY YOU COPIED THE NAME OF MY APP";
+        
+        // Use the Clipboard API to set the custom text
+        if (event.clipboardData) {
+            event.clipboardData.setData('text/plain', customText);
+        } else if (window.clipboardData) { // For IE
+            window.clipboardData.setData('Text', customText);
+        }
+    }
+    </script>
