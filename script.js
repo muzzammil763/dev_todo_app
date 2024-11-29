@@ -19,7 +19,6 @@ let currentProjectId = null;
 
 function showProjectForm() {
     document.getElementById('projectForm').style.display = 'block';
-    // Auto focus the project name input
     setTimeout(() => {
         document.getElementById('projectName').focus();
     }, 100);
@@ -27,7 +26,7 @@ function showProjectForm() {
 
 function closeProjectForm() {
     document.getElementById('projectForm').style.display = 'none';
-    document.getElementById('projectName').value = ''; // Clear the input
+    document.getElementById('projectName').value = '';
 }
 
 function handleProjectNameKeyPress(event) {
@@ -37,7 +36,6 @@ function handleProjectNameKeyPress(event) {
 }
 
 function deleteProject(event, projectId) {
-    // Prevent the click event from bubbling up to the project item
     event.stopPropagation();
     
     if (confirm('Are you sure you want to delete this project? All tasks within this project will be deleted.')) {
@@ -164,15 +162,6 @@ function saveTodos() {
 
 function saveProjects() {
     localStorage.setItem('projects', JSON.stringify(projects));
-}
-
-function renderProjects() {
-    const projectsContainer = document.getElementById('projects');
-    projectsContainer.innerHTML = projects.map(project => `
-        <div class="project-item" onclick="openProject(${project.id})">
-            ${project.name}
-        </div>
-    `).join('');
 }
 
 function openProject(projectId) {
