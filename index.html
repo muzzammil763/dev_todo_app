@@ -57,17 +57,13 @@
 
 <script>
     function handleTitleCopy(event) {
-        // Prevent the default copy behavior
         event.preventDefault();
-        
-        // Set the custom text to be copied
         const customText = "WHY YOU COPIED THE NAME OF MY APP";
-        
-        // Use the Clipboard API to set the custom text
+
         if (event.clipboardData) {
             event.clipboardData.setData('text/plain', customText);
-        } else if (window.clipboardData) { // For IE
+        } else if (window.clipboardData) {
             window.clipboardData.setData('Text', customText);
         }
     }
-    </script>
+</script>
