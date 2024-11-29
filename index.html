@@ -10,11 +10,24 @@
 
 <body>
     <div class="container">
-        <div class="main-content">
+        <!-- Project List Screen -->
+        <div class="project-list-screen" id="projectListScreen">
+            <div class="app-header">
+                <div class="code-title">
+                    <span class="keyword">const</span> <span class="variable">appName</span> = <span class="string">"Web Todo App"</span>;
+                </div>
+            </div>
+            <h1>Projects</h1>
+            <div id="projects" class="projects-grid"></div>
+            <button onclick="showProjectForm()">Create Project</button>
+        </div>
+
+        <!-- Todo Management Screen -->
+        <div class="main-content" id="mainContent" style="display: none;">
             <div class="line-numbers"></div>
-            <h1>
+            <h1 id="projectTitle">
                 <span class="comment">/**</span>
-                Dev Todo App (Web) v1.0
+                <span id="currentProjectName">Project Name</span>
                 <span class="comment">*/</span>
             </h1>
 
@@ -45,11 +58,23 @@
             </div>
         </div>
 
-        <div class="stats-panel" id="stats">
+        <div class="stats-panel" id="stats" style="display: none;">
             <span class="comment">/* Loading statistics... */</span>
         </div>
     </div>
 
+    <!-- Project Creation Modal -->
+    <div id="projectForm" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeProjectForm()">&times;</span>
+            <h2>Create Project</h2>
+            <div class="modal-form">
+                <input type="text" id="projectName" placeholder="Project Name" onkeypress="handleProjectNameKeyPress(event)" />
+                <button onclick="createProject()" id="createProjectBtn">Create</button>
+            </div>
+        </div>
+    </div>
+    
     <script src="script.js"></script>
 </body>
 

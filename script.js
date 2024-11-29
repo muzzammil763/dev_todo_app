@@ -1,14 +1,124 @@
-let todos = JSON.parse(localStorage.getItem('todos')) || [];
-let categories = new Set(['feature', 'bug', 'refactor', 'docs', 'testing']);
-document.getElementById('categorySelect').addEventListener('change', function (e) {
-    const customInput = document.getElementById('customCategory');
-    customInput.style.display = e.target.value === 'custom' ? 'block' : 'none';
-    if (e.target.value === 'custom') {
-        customInput.focus();
-    }
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadProjects();
 });
 
+function loadProjects() {
+    projects = JSON.parse(localStorage.getItem('projects')) || [];
+    renderProjects();
+}
+
+function handleProjectNameKeyPress(event) {
+    if (event.key === 'Enter') {
+        createProject();
+    }
+}
+
+let projects = JSON.parse(localStorage.getItem('projects')) || [];
+let currentProjectId = null;
+
+function showProjectForm() {
+    document.getElementById('projectForm').style.display = 'block';
+    // Auto focus the project name input
+    setTimeout(() => {
+        document.getElementById('projectName').focus();
+    }, 100);
+}
+
+function closeProjectForm() {
+    document.getElementById('projectForm').style.display = 'none';
+    document.getElementById('projectName').value = ''; // Clear the input
+}
+
+function handleProjectNameKeyPress(event) {
+    if (event.key === 'Enter') {
+        createProject();
+    }
+}
+
+function deleteProject(event, projectId) {
+    // Prevent the click event from bubbling up to the project item
+    event.stopPropagation();
+    
+    if (confirm('Are you sure you want to delete this project? All tasks within this project will be deleted.')) {
+        projects = projects.filter(project => project.id !== projectId);
+        saveProjects();
+        renderProjects();
+    }
+}
+
+function closeProjectForm() {
+    document.getElementById('projectForm').style.display = 'none';
+}
+
+function createProject() {
+    const projectName = document.getElementById('projectName').value.trim();
+    if (projectName) {
+        const project = {
+            id: Date.now(),
+            name: projectName,
+            todos: []
+        };
+        projects.push(project);
+        saveProjects();
+        renderProjects();
+        closeProjectForm();
+    }
+}
+
+function saveProjects() {
+    localStorage.setItem('projects', JSON.stringify(projects));
+}
+
+
+function renderProjects() {
+    const projectsContainer = document.getElementById('projects');
+    if (projects.length === 0) {
+        projectsContainer.innerHTML = `
+            <div class="empty-state">
+                <div class="code-block">
+                    <span class="comment">// No projects yet</span><br>
+                    <span class="keyword">const</span> <span class="variable">projects</span> = <span class="number">[]</span>;<br>
+                    <span class="comment">// Create your first project! ✨</span>
+                </div>
+            </div>`;
+    } else {
+        projectsContainer.innerHTML = projects.map(project => `
+            <div class="project-item">
+                <div class="project-content" onclick="openProject(${project.id})">
+                    <span class="project-name">${project.name}</span>
+                    <div class="project-meta">
+                        <span class="todo-count">${project.todos.length} tasks</span>
+                    </div>
+                </div>
+                <button 
+                    class="delete-project-btn" 
+                    onclick="deleteProject(event, ${project.id})"
+                    title="Delete Project"
+                >
+                    👤❌
+                </button>
+            </div>
+        `).join('');
+    }
+}
+
+function openProject(projectId) {
+    currentProjectId = projectId;
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+        document.getElementById('projectListScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        document.getElementById('stats').style.display = 'block';
+        document.getElementById('currentProjectName').textContent = project.name;
+        todos = project.todos;
+        renderTodos();
+    }
+}
+
 function addTodo() {
+    if (currentProjectId === null) return;
+
     const input = document.getElementById('todoInput');
     const categorySelect = document.getElementById('categorySelect');
     const customCategory = document.getElementById('customCategory');
@@ -34,8 +144,9 @@ function addTodo() {
             edited: false
         };
 
-        todos.push(todo);
-        saveTodos();
+        const project = projects.find(p => p.id === currentProjectId);
+        project.todos.push(todo);
+        saveProjects();
         renderTodos();
         input.value = '';
         customCategory.value = '';
@@ -43,6 +154,50 @@ function addTodo() {
         customCategory.style.display = 'none';
     }
 }
+
+function saveTodos() {
+    const project = projects.find(p => p.id === currentProjectId);
+    project.todos = todos;
+    saveProjects();
+    updateStats();
+}
+
+function saveProjects() {
+    localStorage.setItem('projects', JSON.stringify(projects));
+}
+
+function renderProjects() {
+    const projectsContainer = document.getElementById('projects');
+    projectsContainer.innerHTML = projects.map(project => `
+        <div class="project-item" onclick="openProject(${project.id})">
+            ${project.name}
+        </div>
+    `).join('');
+}
+
+function openProject(projectId) {
+    currentProjectId = projectId;
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+        todos = project.todos;
+        document.getElementById('projectListScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        document.getElementById('stats').style.display = 'block';
+        document.getElementById('currentProjectName').textContent = project.name;
+        renderTodos();
+    }
+}
+
+let todos = JSON.parse(localStorage.getItem('todos')) || [];
+let categories = new Set(['feature', 'bug', 'refactor', 'docs', 'testing']);
+document.getElementById('categorySelect').addEventListener('change', function (e) {
+    const customInput = document.getElementById('customCategory');
+    customInput.style.display = e.target.value === 'custom' ? 'block' : 'none';
+    if (e.target.value === 'custom') {
+        customInput.focus();
+    }
+});
+
 
 function updateCategorySelect() {
     const select = document.getElementById('categorySelect');
@@ -76,7 +231,7 @@ function editCategory(id) {
     if (newCategory && newCategory !== 'custom' && newCategory !== todo.category) {
         todo.category = newCategory;
         todo.timestamp = new Date().toISOString();
-        todo.edited = true; 
+        todo.edited = true;
         saveTodos();
         renderTodos();
     }
@@ -95,13 +250,13 @@ function updateLineNumbers() {
 function editTodo(id) {
     const todo = todos.find(t => t.id === id);
     const todoElement = document.querySelector(`[data-todo-id="${id}"]`);
-    const editForm = 
+    const editForm =
         `<div class="edit-form">
             <input type="text" class="edit-input" value="${todo.text}" />
             <select class="edit-category">
                 ${Array.from(categories)
-                    .map(cat => `<option value="${cat}" ${cat === todo.category ? 'selected' : ''}>${cat}</option>`)
-                    .join('')}
+            .map(cat => `<option value="${cat}" ${cat === todo.category ? 'selected' : ''}>${cat}</option>`)
+            .join('')}
             </select>
             <select class="edit-priority">
                 <option value="low" ${todo.priority === 'low' ? 'selected' : ''}>Low</option>
@@ -121,10 +276,7 @@ renderTodos = function () {
     updateLineNumbers();
 };
 
-function saveTodos() {
-    localStorage.setItem('todos', JSON.stringify(todos));
-    updateStats();
-}
+
 
 function updateStats() {
     const total = todos.length;
@@ -139,7 +291,7 @@ function updateStats() {
         return acc;
     }, {});
 
-    document.getElementById('stats').innerHTML = 
+    document.getElementById('stats').innerHTML =
         `<span class="comment">/* Statistics */</span><br>
         <div><span class="status-indicator pending"></span>Total Tasks: ${total}</div>
         <div><span class="status-indicator completed"></span>Completed: ${completed}</div>
@@ -160,7 +312,7 @@ function renderTodos() {
     const todoList = document.getElementById('todoList');
 
     if (todos.length === 0) {
-        todoList.innerHTML = 
+        todoList.innerHTML =
             `<div class="empty-state">
                 <div class="code-block">
                     <span class="comment">// No todos found</span><br>
@@ -186,7 +338,7 @@ function renderTodos() {
             }
             return new Date(b.timestamp) - new Date(a.timestamp);
         })
-        .map((todo, index) => 
+        .map((todo, index) =>
             `<li class="todo-item priority-${todo.priority} ${todo.completed ? 'completed' : ''}" data-todo-id="${todo.id}">
                 <div class="todo-content">
                     <div onclick="toggleTodo(${todo.id})" style="cursor: pointer;">
@@ -203,8 +355,8 @@ function renderTodos() {
                     </button>
                     <select onchange="editCategory(${todo.id})">
                         ${Array.from(categories)
-                        .map(cat => `<option value="${cat}" ${cat === todo.category ? 'selected' : ''}>${cat}</option>`)
-                        .join('')}
+                .map(cat => `<option value="${cat}" ${cat === todo.category ? 'selected' : ''}>${cat}</option>`)
+                .join('')}
                     </select>
                     <button class="icon-button delete-btn" onclick="deleteTodo(${todo.id})" title="Delete">
                         🗑️
