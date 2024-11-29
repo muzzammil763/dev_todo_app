@@ -246,6 +246,7 @@ button:hover {
 .todo-item.completed {
     opacity: 0.7;
     text-decoration: line-through;
+    text-decoration-color: var(--success);
 }
 
 .todo-content {

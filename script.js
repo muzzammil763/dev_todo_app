@@ -30,7 +30,8 @@ function addTodo() {
             category,
             priority,
             completed: false,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            edited: false
         };
 
         todos.push(todo);
@@ -174,16 +175,13 @@ function renderTodos() {
 
     todoList.innerHTML = todos
         .sort((a, b) => {
-            // Sort by priority first (urgent > high > medium > low)
             const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
             if (a.priority !== b.priority) {
                 return priorityOrder[a.priority] - priorityOrder[b.priority];
             }
-            // Then by completion status
             if (a.completed !== b.completed) {
                 return a.completed ? 1 : -1;
             }
-            // Finally by timestamp
             return new Date(b.timestamp) - new Date(a.timestamp);
         })
         .map((todo, index) => 
@@ -194,7 +192,7 @@ function renderTodos() {
                     </div>
                     <div class="todo-meta">
                         ${todo.category} | Priority: ${todo.priority} | 
-                        ${new Date(todo.timestamp).toLocaleString()}
+                        ${new Date(todo.timestamp).toLocaleString()}${todo.edited ? ' // Edited' : ''}
                     </div>
                 </div>
                 <div class="actions">
@@ -234,7 +232,9 @@ function saveEdit(id) {
                 ...todo,
                 text: editInput.value,
                 category: editCategory.value,
-                priority: editPriority.value
+                priority: editPriority.value,
+                timestamp: new Date().toISOString(),
+                edited: true
             };
         }
         return todo;
